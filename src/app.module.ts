@@ -19,26 +19,13 @@ import { SongModule } from './song/song.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: (process.env.DB_TYPE as any) || 'mssql',
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT || 1433),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      type: 'postgres',
+      url: process.env.DATABASE_URL,
+      entities: [User, Role, Playlist, Artist, Album, Song],
       synchronize: true,
 
       
-      options:
-        process.env.DB_TYPE === 'mssql'
-          ? { encrypt: false, trustServerCertificate: true }
-          : undefined,
-
-     
-      ssl:
-        process.env.DB_TYPE === 'postgres' && process.env.DB_SSL === 'true'
-          ? { rejectUnauthorized: false }
-          : false,
+      ssl: { rejectUnauthorized: false },
     }),
 
     AuthModule,
