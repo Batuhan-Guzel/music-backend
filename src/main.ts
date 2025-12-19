@@ -7,19 +7,28 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   
+  app.enableCors({
+    origin: true, 
+    credentials: true,
+  });
+
+  
   const ds = app.get(DataSource);
   const roleRepo = ds.getRepository(Role);
 
-  const need = ['ADMIN', 'USER'];
-  for (const name of need) {
+  const roles = ['ADMIN', 'USER'];
+  for (const name of roles) {
     const exists = await roleRepo.findOne({ where: { name } as any });
     if (!exists) {
       await roleRepo.save(roleRepo.create({ name } as any));
     }
   }
-  
 
-  const port = process.env.PORT || 3002;
+  
+  const port = Number(process.env.PORT) || 3002;
   await app.listen(port);
+
+  console.log(`Server running on port ${port}`);
 }
+
 bootstrap();
