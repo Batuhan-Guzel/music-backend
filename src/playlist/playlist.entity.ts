@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 import { User } from '../user/user.entity';
 import { Song } from '../song/song.entity';
 
@@ -10,13 +16,11 @@ export class Playlist {
   @Column()
   name: string;
 
-  
-  @ManyToMany(() => Song, { eager: true })
+  @ManyToMany(() => Song, { cascade: false })
   @JoinTable()
   songs: Song[];
 
-  
-  @ManyToMany(() => User, (user) => user.playlists, { eager: false })
+  @ManyToMany(() => User, (user) => user.playlists, { cascade: false })
   @JoinTable()
   users: User[];
 }
