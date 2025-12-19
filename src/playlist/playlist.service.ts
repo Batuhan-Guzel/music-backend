@@ -24,7 +24,6 @@ export class PlaylistService {
     private readonly songRepo: Repository<Song>,
   ) {}
 
-  
   async createPlaylist(userId: number, dto: CreatePlaylistDto) {
     const name = dto.name?.trim();
     if (!name) throw new BadRequestException('name is required');
@@ -41,7 +40,6 @@ export class PlaylistService {
     return this.playlistRepo.save(playlist);
   }
 
-  
   async myPlaylists(userId: number) {
     return this.playlistRepo
       .createQueryBuilder('playlist')
@@ -54,12 +52,7 @@ export class PlaylistService {
       .getMany();
   }
 
-  
-  async addSongToPlaylist(
-    userId: number,
-    playlistId: number,
-    dto: AddSongDto,
-  ) {
+  async addSongToPlaylist(userId: number, playlistId: number, dto: AddSongDto) {
     const playlist = await this.playlistRepo.findOne({
       where: { id: playlistId },
       relations: ['users', 'songs'],
@@ -80,7 +73,6 @@ export class PlaylistService {
     return this.playlistRepo.save(playlist);
   }
 
-  
   async removeSongFromPlaylist(
     userId: number,
     playlistId: number,
@@ -99,7 +91,6 @@ export class PlaylistService {
     return this.playlistRepo.save(playlist);
   }
 
-  
   async renamePlaylist(userId: number, playlistId: number, name: string) {
     const playlist = await this.playlistRepo.findOne({
       where: { id: playlistId },
@@ -117,7 +108,6 @@ export class PlaylistService {
     return this.playlistRepo.save(playlist);
   }
 
-  
   async deletePlaylist(userId: number, playlistId: number) {
     const playlist = await this.playlistRepo.findOne({
       where: { id: playlistId },

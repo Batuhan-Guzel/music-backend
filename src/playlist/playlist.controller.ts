@@ -1,11 +1,11 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Patch,
-  Param,
   Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -25,7 +25,7 @@ export class PlaylistController {
   }
 
   @Get('my')
-  myPlaylists(@Req() req: any) {
+  my(@Req() req: any) {
     return this.playlistService.myPlaylists(req.user.sub);
   }
 
@@ -35,11 +35,7 @@ export class PlaylistController {
     @Param('id') id: string,
     @Body() dto: AddSongDto,
   ) {
-    return this.playlistService.addSongToPlaylist(
-      req.user.sub,
-      Number(id),
-      dto,
-    );
+    return this.playlistService.addSongToPlaylist(req.user.sub, Number(id), dto);
   }
 
   @Delete(':id/songs/:songId')
