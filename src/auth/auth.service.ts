@@ -20,14 +20,12 @@ export class AuthService {
   ) {}
 
   
-  async register(email: string, password: string) {
-    
+  async register(email: string, password: string, adminCode?: string) {
     const existing = await this.userRepo.findOne({ where: { email } });
     if (existing) {
       throw new BadRequestException('Email already exists');
     }
 
-    
     const hashedPassword = await bcrypt.hash(password, 10);
 
     
@@ -46,12 +44,11 @@ export class AuthService {
     }
 
     
-    const userCount = await this.userRepo.count();
+    const ADMIN_SECRET = process.env.ADMIN_SECRET || 'ADMIN123';
 
-    
-    const roleToAssign = userCount === 0 ? adminRole : userRole;
+    const roleToAssign =
+      adminCode && adminCode.trim() === ADMIN_SECRET ? adminRole : userRole;
 
-    
     const user = this.userRepo.create({
       email,
       password: hashedPassword,
@@ -85,7 +82,7 @@ export class AuthService {
     const payload = {
       sub: user.id,
       email: user.email,
-      role: user.role.name,
+      role: user.role?.name,
     };
 
     return {
