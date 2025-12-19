@@ -19,19 +19,19 @@ import { SongModule } from './song/song.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      type: 'mssql',
-      host: 'BATUHAN',
-      port: 1433,
-      username: 'music_user',
-      password: '123456',   // SENİN ŞİFREN
-      database: 'music_db',
-      entities: [User, Role, Playlist, Artist, Album, Song],
-      synchronize: true,
-      options: {
-        encrypt: false,
-        trustServerCertificate: true,
-      },
-    }),
+  type: (process.env.DB_TYPE as any) || "mssql",
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 1433),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  entities: [__dirname + "/**/*.entity{.ts,.js}"],
+  synchronize: true,
+  options:
+    process.env.DB_TYPE === "mssql"
+      ? { encrypt: false, trustServerCertificate: true }
+      : undefined,
+}),
 
     AuthModule,
     UserModule,
