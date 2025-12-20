@@ -24,98 +24,108 @@ export class PlaylistService {
     private readonly songRepo: Repository<Song>,
   ) {}
 
+  private toId(v: any) {
+    const n = Number(v);
+    if (!Number.isFinite(n) || n <= 0) throw new BadRequestException('Invalid id');
+    return n;
+  }
+
   async createPlaylist(userId: number, dto: CreatePlaylistDto) {
+    const uid = this.toId(userId);
     const name = dto.name?.trim();
     if (!name) throw new BadRequestException('name is required');
 
-    const user = await this.userRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findOne({ where: { id: uid } });
     if (!user) throw new NotFoundException('User not found');
 
-    const playlist = this.playlistRepo.create({
-      name,
-      songs: [],
-      users: [user],
-    });
-
+    const playlist = this.playlistRepo.create({ name, songs: [], users: [user] });
     return this.playlistRepo.save(playlist);
   }
 
   async myPlaylists(userId: number) {
+    const uid = this.toId(userId);
     return this.playlistRepo
       .createQueryBuilder('playlist')
-      .leftJoin('playlist.users', 'user')
+      .innerJoin('playlist.users', 'user', 'user.id = :userId', { userId: uid })
       .leftJoinAndSelect('playlist.songs', 'song')
       .leftJoinAndSelect('song.album', 'album')
       .leftJoinAndSelect('album.artist', 'artist')
-      .where('user.id = :userId', { userId })
       .orderBy('playlist.id', 'DESC')
       .getMany();
   }
 
   async addSongToPlaylist(userId: number, playlistId: number, dto: AddSongDto) {
+    const uid = this.toId(userId);
+    const pid = this.toId(playlistId);
+    const sid = this.toId(dto.songId);
+
     const playlist = await this.playlistRepo.findOne({
-      where: { id: playlistId },
+      where: { id: pid },
       relations: ['users', 'songs'],
     });
     if (!playlist) throw new NotFoundException('Playlist not found');
 
-    const isOwner = playlist.users.some((u) => u.id === userId);
+    const isOwner = playlist.users.some((u) => u.id === uid);
     if (!isOwner) throw new ForbiddenException('This playlist is not yours');
 
-    const song = await this.songRepo.findOne({ where: { id: dto.songId } });
+    const song = await this.songRepo.findOne({ where: { id: sid } });
     if (!song) throw new NotFoundException('Song not found');
 
-    if (playlist.songs.some((s) => s.id === song.id)) {
-      return playlist;
-    }
+    const exists = playlist.songs.some((s) => s.id === sid);
+    if (exists) return playlist;
 
     playlist.songs.push(song);
     return this.playlistRepo.save(playlist);
   }
 
-  async removeSongFromPlaylist(
-    userId: number,
-    playlistId: number,
-    songId: number,
-  ) {
+  async removeSongFromPlaylist(userId: number, playlistId: number, songId: number) {
+    const uid = this.toId(userId);
+    const pid = this.toId(playlistId);
+    const sid = this.toId(songId);
+
     const playlist = await this.playlistRepo.findOne({
-      where: { id: playlistId },
+      where: { id: pid },
       relations: ['users', 'songs'],
     });
     if (!playlist) throw new NotFoundException('Playlist not found');
 
-    const isOwner = playlist.users.some((u) => u.id === userId);
+    const isOwner = playlist.users.some((u) => u.id === uid);
     if (!isOwner) throw new ForbiddenException('This playlist is not yours');
 
-    playlist.songs = playlist.songs.filter((s) => s.id !== songId);
+    playlist.songs = (playlist.songs ?? []).filter((s) => s.id !== sid);
     return this.playlistRepo.save(playlist);
   }
 
   async renamePlaylist(userId: number, playlistId: number, name: string) {
+    const uid = this.toId(userId);
+    const pid = this.toId(playlistId);
+    const n = name?.trim();
+    if (!n) throw new BadRequestException('name is required');
+
     const playlist = await this.playlistRepo.findOne({
-      where: { id: playlistId },
+      where: { id: pid },
       relations: ['users'],
     });
     if (!playlist) throw new NotFoundException('Playlist not found');
 
-    const isOwner = playlist.users.some((u) => u.id === userId);
+    const isOwner = playlist.users.some((u) => u.id === uid);
     if (!isOwner) throw new ForbiddenException('This playlist is not yours');
-
-    const n = name?.trim();
-    if (!n) throw new BadRequestException('name is required');
 
     playlist.name = n;
     return this.playlistRepo.save(playlist);
   }
 
   async deletePlaylist(userId: number, playlistId: number) {
+    const uid = this.toId(userId);
+    const pid = this.toId(playlistId);
+
     const playlist = await this.playlistRepo.findOne({
-      where: { id: playlistId },
+      where: { id: pid },
       relations: ['users'],
     });
     if (!playlist) throw new NotFoundException('Playlist not found');
 
-    const isOwner = playlist.users.some((u) => u.id === userId);
+    const isOwner = playlist.users.some((u) => u.id === uid);
     if (!isOwner) throw new ForbiddenException('This playlist is not yours');
 
     await this.playlistRepo.remove(playlist);

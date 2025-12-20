@@ -16,6 +16,6 @@ export class User {
   @ManyToOne(() => Role, { eager: true })
   role: Role;
 
-  @ManyToMany(() => Playlist)
+  @ManyToMany(() => Playlist, (playlist) => playlist.users)
   playlists: Playlist[];
 }
